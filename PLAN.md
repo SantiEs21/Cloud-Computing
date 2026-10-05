@@ -32,8 +32,8 @@ segments(trip_id uuid, seq int, t_start_ms int, duration_ms int, sha256 text, si
 fingerprints(trip_id uuid, sample_idx int, t_ms int, phash text, dhash text,
          created_at timestamptz default now(), primary key(trip_id, sample_idx))
 ```
-- [ ] RLS on: anon may `insert` and `select`, nothing else. (SQL written; verify with `SUPABASE_IT=1 npm test`)
-- [ ] Function `purge_expired(hours int)` deleting rows older than N hours (security definer),
+- [x] RLS on: anon may `insert` and `select`, nothing else. (verified by `SUPABASE_IT=1 npm test`)
+- [x] Function `purge_expired(hours int)` deleting rows older than N hours (security definer),
       callable via RPC. Optional `pg_cron` job every 10 min with a comment on how to enable it.
 
 ### 2.2 Encoder page (one simple page)
