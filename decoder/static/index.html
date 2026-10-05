@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashcam Decoder</title>
+    <style>
+      body { font-family: sans-serif; max-width: 760px; margin: 1em auto; padding: 0 1em; }
+      fieldset { margin-bottom: 1em; }
+      table { border-collapse: collapse; }
+      td { padding: 2px 12px 2px 0; vertical-align: top; }
+      #bar { display: flex; height: 24px; margin: 8px 0; border: 1px solid #999; }
+      #bar div { flex: 1; }
+      .ok { background: #2a2; } .bad { background: #d22; } .none { background: #bbb; }
+      .AUTHENTIC { color: #080; } .MODIFIED { color: #c60; } .NO { color: #c00; }
+      .err { color: #b00; }
+    </style>
+  </head>
+  <body>
+    <h1>Dashcam Decoder</h1>
+
+    <fieldset>
+      <label>Trip
+        <select id="trip"><option value="">Auto — search all trips</option></select>
+      </label><br /><br />
+      <input type="file" id="video" accept="video/*" />
+      <button id="verify">Verify</button>
+      <span id="busy"></span>
+    </fieldset>
+
+    <div id="result"></div>
+
+    <fieldset>
+      <legend>Expired data</legend>
+      Delete server data older than <input id="hours" type="number" value="24" min="1" style="width:4em" /> h
+      <button id="purge">Purge</button> <span id="purged"></span>
+    </fieldset>
+
+    <script>
+      const $ = (id) => document.getElementById(id)
+
+      async function loadTrips() {
+        const trips = await (await fetch('/api/trips')).json()
+        for (const t of trips) {
+          const o = document.createElement('option')
+          o.value = t.id
+          o.textContent = `${t.driver_id} · ${new Date(t.started_at).toLocaleString()} · ${t.id.slice(0, 8)}`
+          $('trip').append(o)
+        }
+      }
+
+      $('verify').onclick = async () => {
+        const file = $('video').files[0]
+        if (!file) return alert('Choose a video')
+        const form = new FormData()
+        form.append('video', file)
+        form.append('trip_id', $('trip').value)
+        $('busy').textContent = 'Processing...'
+        $('result').innerHTML = ''
+        const res = await fetch('/api/verify', { method: 'POST', body: form })
+        const r = await res.json()
+        $('busy').textContent = ''
+        if (!res.ok) return ($('result').innerHTML = `<p class="err">${r.detail}</p>`)
+        show(r)
+      }
+
+      function show(r) {
+        const exact = r.exact_match.length
+          ? `YES — bit-exact copy of segment ${r.exact_match.map((e) => e.seq).join(', ')}`
+          : 'no (file is not byte-identical to a recorded segment)'
+        const sections = r.modified_sections.length
+          ? r.modified_sections.map((s) => `${s.from_s}–${s.to_s} s`).join(', ')
+          : 'none'
+        const bar = r.distances
+          .map((d) => `<div class="${d === null ? 'none' : d <= r.threshold ? 'ok' : 'bad'}" title="${d ?? 'missing'}"></div>`)
+          .join('')
+        $('result').innerHTML = `
+          <h2 class="${r.verdict.split(' ')[0]}">${r.verdict}</h2>
+          <table>
+            <tr><td>Trip</td><td>${r.trip_id} (${r.trips_compared} trip(s) compared)</td></tr>
+            <tr><td>Exact SHA-256 match</td><td>${exact}</td></tr>
+            <tr><td>Matched samples</td><td>${r.matched_samples} / ${r.samples} (${r.matched_pct} %)</td></tr>
+            <tr><td>Mean pHash distance</td><td>${r.mean_distance} bits (threshold ${r.threshold})</td></tr>
+            <tr><td>Position in trip</td><td>video starts at ${r.position_s} s of the trip</td></tr>
+            <tr><td>Video duration</td><td>${r.video_duration_s} s</td></tr>
+            <tr><td>Modified sections</td><td>${sections}</td></tr>
+            <tr><td>Processing time</td><td>${r.time_ms.total} ms (hashing ${r.time_ms.hashing}, matching ${r.time_ms.matching})</td></tr>
+          </table>
+          <div id="bar">${bar}</div>
+          <small>One box per 0.5 s sample: green = matched, red = changed, grey = no stored sample at that time.</small>`
+      }
+
+      $('purge').onclick = async () => {
+        const form = new FormData()
+        form.append('hours', $('hours').value)
+        const r = await (await fetch('/api/purge', { method: 'POST', body: form })).json()
+        $('purged').textContent = `deleted ${r.fingerprints} fingerprints, ${r.segments} segments, ${r.trips} trips`
+      }
+
+      loadTrips()
+    </script>
+  </body>
+</html>

@@ -64,7 +64,7 @@ fingerprints(trip_id uuid, sample_idx int, t_ms int, phash text, dhash text,
 see pending grow then go to 0; Supabase table shows no gaps in `sample_idx`.
 
 ## Block 3 — Decoder (~1.5 h)
-- [ ] `decoder/matching.py`:
+- [x] `decoder/matching.py`:
   1. Read the uploaded video with OpenCV, take one frame every 500 ms (by timestamp), compute pHash.
   2. Load the trip's fingerprints from Supabase ordered by `t_ms`.
   3. Sliding window: for each offset, mean Hamming distance query vs stored → best offset.
@@ -72,13 +72,16 @@ see pending grow then go to 0; Supabase table shows no gaps in `sample_idx`.
   5. Consecutive unmatched (≥ 2) → "modified section from X s to Y s".
   6. Verdict: `AUTHENTIC` (≥ 90 % matched), `MODIFIED` (30–90 % or modified sections),
      `NO MATCH` (< 30 %).
-- [ ] Exact check: SHA-256 of uploaded file equals a stored segment → "bit-exact original segment N".
-- [ ] `POST /api/verify` (trip_id or driver_id + video) → JSON: verdict, score, % matched, position
+- [x] Exact check: SHA-256 of uploaded file equals a stored segment → "bit-exact original segment N".
+- [x] `POST /api/verify` (trip_id or driver_id + video) → JSON: verdict, score, % matched, position
       in trip (s), modified sections, number of samples, processing time. `GET /api/trips`.
       `POST /api/purge` (calls `purge_expired`).
-- [ ] `static/index.html`: select trip, upload video, Verify button, result table, simple colored bar
+- [x] `static/index.html`: select trip, upload video, Verify button, result table, simple colored bar
       (green matched / red unmatched), Purge button.
-- [ ] pytest on matching with fake hash lists (shifted, part replaced, other trip).
+- [x] pytest on matching with fake hash lists (shifted, part replaced, other trip).
+
+- Note: matching aligns by `t_ms` (nearest stored sample in time), not by index, because browser
+  timers jitter (seen in a real trip: 197–1007 ms spacing). No `trip_id` → all trips are compared.
 
 👤 Check: download a segment from the encoder → AUTHENTIC + bit-exact; segment of another trip → NO MATCH.
 

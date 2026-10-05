@@ -73,7 +73,7 @@ cd encoder && npm test                            # Vitest (hash parity, offline
 cd encoder && SUPABASE_IT=1 npm test              # + integration test against the real Supabase
 python3 -m venv .venv  (Windows: .venv\Scripts\activate | mac/linux: source .venv/bin/activate)
 pip install -r requirements.txt
-uvicorn decoder.main:app --reload                 # http://localhost:8000  (GET /health)
+uvicorn decoder.main:app --reload                 # http://localhost:8000  (page + /api/verify)
 python -m pytest                                  # decoder tests (run from repo root)
 python -m decoder.tests.make_hash_fixtures        # regenerate hash parity fixtures
 # Supabase: paste supabase/schema.sql in the SQL Editor (safe to re-run)
