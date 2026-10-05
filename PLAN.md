@@ -64,7 +64,8 @@ fingerprints(trip_id uuid, sample_idx int, t_ms int, phash text, dhash text,
 see pending grow then go to 0; Supabase table shows no gaps in `sample_idx`.
 
 ## Block 3 — Decoder (~1.5 h)
-- [x] `decoder/matching.py`: (code + tests done; real webm segment check pending 👤)
+- [x] `decoder/matching.py`: (verified on a real Chrome webm segment: exact SHA match, AUTHENTIC,
+      position 0.0 s, mean 3.0 bits; file-mode trip check pending 👤)
   1. Read the uploaded video with OpenCV, take one frame every 500 ms (by timestamp), compute pHash.
   2. Load the trip's fingerprints from Supabase ordered by `t_ms`.
   3. Sliding window: for each offset, mean Hamming distance query vs stored → best offset.

@@ -67,6 +67,7 @@ export class Recorder {
 
   start() {
     this.draw()
+    this.sample() // a sample at t≈0 so the first frame of every video has a stored hash
     this.startSegment()
     this.timers.push(
       window.setInterval(() => this.draw(), 1000 / FPS),

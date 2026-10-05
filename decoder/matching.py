@@ -14,7 +14,7 @@ import cv2
 from decoder.fingerprint import hamming, phash
 
 SAMPLE_MS = 500
-MAX_GAP_MS = 350        # a stored sample further away in time than this counts as "missing"
+MAX_GAP_MS = 600        # stored sample further away in time = "missing" (> 500 ms spacing: timer jitter, edges)
 MISSING_DIST = 32       # distance used for missing samples (= two random 64-bit hashes)
 MIN_RUN = 2             # consecutive unmatched samples that make a "modified section"
 
