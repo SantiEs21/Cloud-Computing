@@ -32,27 +32,27 @@ segments(trip_id uuid, seq int, t_start_ms int, duration_ms int, sha256 text, si
 fingerprints(trip_id uuid, sample_idx int, t_ms int, phash text, dhash text,
          created_at timestamptz default now(), primary key(trip_id, sample_idx))
 ```
-- [ ] RLS on: anon may `insert` and `select`, nothing else.
-- [ ] Function `purge_expired(hours int)` deleting rows older than N hours (security definer),
+- [x] RLS on: anon may `insert` and `select`, nothing else.
+- [x] Function `purge_expired(hours int)` deleting rows older than N hours (security definer),
       callable via RPC. Optional `pg_cron` job every 10 min with a comment on how to enable it.
 
 ### 2.2 Encoder page (one simple page)
-- [ ] Inputs: Driver ID, Source (Webcam / Video file). Buttons: Start, Stop, "Simulate offline"
+- [x] Inputs: Driver ID, Source (Webcam / Video file). Buttons: Start, Stop, "Simulate offline"
       checkbox. Live preview.
-- [ ] Status list: frames captured, hashes generated, sent, pending (offline), network state,
+- [x] Status list: frames captured, hashes generated, sent, pending (offline), network state,
       recording time, last upload latency.
-- [ ] Capture: draw source on a canvas at 15 fps → `canvas.captureStream(15)` → `MediaRecorder`
+- [x] Capture: draw source on a canvas at 15 fps → `canvas.captureStream(15)` → `MediaRecorder`
       (`video/webm` in Chrome; mp4 if supported). Restart every 10 s → segment blob →
       SHA-256 (`crypto.subtle`) → segment row.
-- [ ] Every 500 ms: hash the canvas (pHash + dHash) → fingerprint row with `sample_idx`, `t_ms`
+- [x] Every 500 ms: hash the canvas (pHash + dHash) → fingerprint row with `sample_idx`, `t_ms`
       (in file mode `t_ms = video.currentTime*1000`).
-- [ ] Queue: every row is saved in IndexedDB (`idb`) first, then sent in batches with
+- [x] Queue: every row is saved in IndexedDB (`idb`) first, then sent in batches with
       `upsert(..., {ignoreDuplicates: true})`; removed from the queue only after success.
       Retry every 3 s while items are pending and on the `online` event. "Simulate offline"
       makes the sender skip sending (or throw) so the queue grows.
-- [ ] Cleanup: segments stored in IndexedDB; delete those older than 10 min (configurable) every
+- [x] Cleanup: segments stored in IndexedDB; delete those older than 10 min (configurable) every
       minute. List of local segments with a **Download** link (needed to test the decoder).
-- [ ] Vitest: queue keeps items while offline, empties after reconnect, sending the same batch
+- [x] Vitest: queue keeps items while offline, empties after reconnect, sending the same batch
       twice produces no error.
 
 👤 Check: record 1 min with webcam, tick "Simulate offline" 20 s (or DevTools → Network → Offline),
