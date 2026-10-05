@@ -75,5 +75,5 @@ decoder/    FastAPI server: serves both pages and the API
   tests/            pytest tests
 supabase/schema.sql tables, append-only RLS, purge_expired()
 eval/       offline evaluation scripts and results/
-docs/       report.md (report), demo.md (demo video script), build_pdf.py
+docs/       report.md (report), build_pdf.py (report -> PDF)
 ```
