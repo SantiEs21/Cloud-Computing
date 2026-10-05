@@ -85,6 +85,10 @@ async def verify(video: UploadFile, trip_id: str = Form("")):
     if not results:
         raise HTTPException(404, "No stored fingerprints for this trip")
     best = max(results, key=lambda r: (r["matched_pct"], -(r["mean_distance"] or 99)))
+    if exact and not trip_id:
+        # A bit-exact segment identifies its trip for sure; perceptual scores can tie between
+        # visually similar trips (e.g. two webcam recordings of the same desk).
+        best = next((r for r in results if r["trip_id"] == exact[0]["trip_id"]), best)
     t_end = time.perf_counter()
 
     return {
