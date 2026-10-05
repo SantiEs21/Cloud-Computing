@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 RES = Path(__file__).resolve().parent / "results"
-BLUE, ORANGE = "#2a78d6", "#eb6834"  # categorical slots 1-2 (validated colour pair)
+BLUE, ORANGE = "#2a78d6", "#eb6834"  # blue / orange: distinguishable also with colour blindness
 INK, MUTED, GRID = "#222222", "#6b6b6b", "#e4e4e0"
 
 
