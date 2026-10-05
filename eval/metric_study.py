@@ -6,7 +6,7 @@ For each metric: mean distance per variant, and the threshold that best separate
 negatives (best accuracy). Writes results/metrics.csv, results/thresholds.csv, histogram plots and
 the pHash threshold to decoder/thresholds.json.
 
-Usage: python eval/metric_study.py   (after make_variants.py)
+Usage (repo root, after make_variants.py): python -m eval.metric_study
 """
 import json
 from pathlib import Path
@@ -34,13 +34,13 @@ ALIGNED = ["original", "fps_10", "h265", "bitrate_300k", "res_640x360", "crf_40"
            "contrast_1_5", "salt_pepper_5", "gaussian_noise", "logo", "crop_80"]
 
 
-def frames(path: Path, step_s=STEP_S, limit=None) -> dict[int, np.ndarray]:
+def frames(path: Path, step_s=STEP_S) -> dict[int, np.ndarray]:
     """Frames every step_s seconds, keyed by time in ms (rounded to the step)."""
     cap = cv2.VideoCapture(str(path))
     out, next_t = {}, 0.0
     while True:
         ok, f = cap.read()
-        if not ok or (limit and len(out) >= limit):
+        if not ok:
             break
         t = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000
         if t + 1e-6 >= next_t:

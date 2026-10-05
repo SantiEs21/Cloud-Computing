@@ -254,6 +254,9 @@ as 42.0–47.5 s.
 (`trip-72d0f447-seg0.webm`) → exact SHA-256 match with segment 0, `AUTHENTIC`, position 0.0 s,
 mean distance 3.0 bits. The JS and Python hashes of the same frames differ by 0–2 bits on most samples.
 
+**Decoder tests** (`python -m pytest`): 11/11 pass — hashing, matching on synthetic hash sequences
+(shift, partial replacement, other trip, irregular browser timing), pages and API.
+
 ## 5. Limitations
 
 ### Encoder

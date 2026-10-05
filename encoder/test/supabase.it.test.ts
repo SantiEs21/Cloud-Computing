@@ -22,6 +22,7 @@ describe.skipIf(!process.env.SUPABASE_IT)('Supabase (integration)', () => {
     const { data } = await supabase.from('fingerprints').select('phash').eq('trip_id', trip)
     expect(data).toEqual([{ phash: row.phash }])
   })
+
   it('purge_expired is callable with the public key', async () => {
     const r = await purgeServer(24)
     expect(typeof r.fingerprints).toBe('number')

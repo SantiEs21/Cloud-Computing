@@ -1,4 +1,4 @@
-"""Figures for the reports, from real results:
+"""Figures for docs/report.md, from real results:
 - results/video_eval_matched.png: % matched samples per variant (from results/video_eval.csv)
 - results/network_arrival.png: when fingerprint rows reached Supabase, online vs offline trip
 
@@ -63,8 +63,9 @@ def network_chart(online: str, offline: str):
         rows = fetch_all(lambda: db.table("fingerprints").select("created_at").eq("trip_id", trip["id"]).order("created_at"))
         secs = [(datetime.fromisoformat(r["created_at"]) - start).total_seconds() for r in rows]
         ax.step(secs, range(1, len(secs) + 1), where="post", color=color, linewidth=2, label=f"{name} ({prefix})")
-        ax.text(secs[-1] - 4, len(secs) / 2, f"{name}\n{len(secs)} rows arrive at {secs[-1]:.0f} s" if name != "online" else "",
-                color=INK, fontsize=8, va="center", ha="right")
+        if prefix == offline:  # direct label for the jump
+            ax.text(secs[-1] - 4, len(secs) / 2, f"{name}\n{len(secs)} rows arrive at {secs[-1]:.0f} s",
+                    color=INK, fontsize=8, va="center", ha="right")
     ax.set_xlabel("Seconds since the trip started", color=INK)
     ax.set_ylabel("Fingerprint rows on server", color=INK)
     ax.set_title("When hashes reach Supabase", color=INK, loc="left", fontsize=11)

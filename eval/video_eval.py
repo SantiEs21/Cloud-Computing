@@ -1,7 +1,7 @@
 """Runs the real decoder matching on every variant against trip A's hashes stored in Supabase
 (the hashes the browser encoder sent), and writes results/video_eval.csv + .md.
 
-Usage: python eval/video_eval.py <trip A id or its first 8 chars>
+Usage (repo root): python -m eval.video_eval <trip A id or its first 8 chars>
 """
 import json
 import sys

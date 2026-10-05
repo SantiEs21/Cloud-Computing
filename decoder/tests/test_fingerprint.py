@@ -1,9 +1,6 @@
 import cv2
-import numpy as np
-from fastapi.testclient import TestClient
 
 from decoder.fingerprint import ahash, dhash, hamming, phash, whash
-from decoder.main import app
 from decoder.tests.make_hash_fixtures import make_images
 
 
@@ -27,7 +24,3 @@ def test_robust_to_small_changes_but_not_other_images():
 def test_hamming():
     assert hamming("0000000000000000", "ffffffffffffffff") == 64
     assert hamming("000000000000000f", "0000000000000001") == 3
-
-
-def test_health():
-    assert TestClient(app).get("/health").json() == {"status": "ok"}

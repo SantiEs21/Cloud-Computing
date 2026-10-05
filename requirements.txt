@@ -12,7 +12,6 @@ ppdeep
 py-tlsh
 pandas
 matplotlib
-scikit-learn
 pytest
 tabulate
 markdown

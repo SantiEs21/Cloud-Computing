@@ -109,7 +109,7 @@ def match(query: list[Sample], stored: list[Sample], threshold: int) -> dict:
     """Full comparison of one video against one trip."""
     if not query or not stored:
         return {"verdict": "NO MATCH", "matched_pct": 0.0, "mean_distance": None, "position_s": None,
-                "modified_sections": [], "samples": len(query), "matched_samples": 0}
+                "modified_sections": [], "samples": len(query), "matched_samples": 0, "distances": []}
     offset, mean = best_offset(query, stored)
     d = distances(query, stored, offset)
     matched = [x is not None and x <= threshold for x in d]

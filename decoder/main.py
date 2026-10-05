@@ -21,7 +21,7 @@ from decoder.matching import Sample, match, video_samples
 HERE = Path(__file__).parent
 load_dotenv(HERE / ".env")
 db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_ANON_KEY"])
-# pHash threshold in bits; comes from eval/metric_study.py (default 10 until the evaluation runs)
+# pHash threshold in bits, chosen by the evaluation (eval/metric_study.py writes thresholds.json)
 THRESHOLD = json.loads((HERE / "thresholds.json").read_text())["phash"]
 
 app = FastAPI(title="Dashcam decoder")

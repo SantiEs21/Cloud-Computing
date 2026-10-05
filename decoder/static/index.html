@@ -62,11 +62,16 @@
         form.append('trip_id', $('trip').value)
         $('busy').textContent = 'Processing...'
         $('result').innerHTML = ''
-        const res = await fetch('/api/verify', { method: 'POST', body: form })
-        const r = await res.json()
-        $('busy').textContent = ''
-        if (!res.ok) return ($('result').innerHTML = `<p class="err">${r.detail}</p>`)
-        show(r)
+        try {
+          const res = await fetch('/api/verify', { method: 'POST', body: form })
+          const r = await res.json()
+          if (!res.ok) throw new Error(typeof r.detail === 'string' ? r.detail : JSON.stringify(r.detail))
+          show(r)
+        } catch (e) {
+          $('result').innerHTML = `<p class="err">Error: ${e.message}</p>` // e.g. server stopped
+        } finally {
+          $('busy').textContent = ''
+        }
       }
 
       function show(r) {
@@ -98,8 +103,14 @@
       $('purge').onclick = async () => {
         const form = new FormData()
         form.append('hours', $('hours').value)
-        const r = await (await fetch('/api/purge', { method: 'POST', body: form })).json()
-        $('purged').textContent = `deleted ${r.fingerprints} fingerprints, ${r.segments} segments, ${r.trips} trips`
+        try {
+          const res = await fetch('/api/purge', { method: 'POST', body: form })
+          const r = await res.json()
+          if (!res.ok) throw new Error(JSON.stringify(r.detail))
+          $('purged').textContent = `deleted ${r.fingerprints} fingerprints, ${r.segments} segments, ${r.trips} trips`
+        } catch (e) {
+          $('purged').textContent = `Error: ${e.message}`
+        }
       }
 
       loadTrips()
