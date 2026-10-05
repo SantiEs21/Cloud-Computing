@@ -113,10 +113,10 @@ put the videos in `eval/data/` (`tripA.mp4`, `tripB.mp4`) and give the trip IDs.
   from a 720p copy (4K too slow). pHash threshold = 16 bits. Video eval: 20/21 correct (crop 80 % missed).
 
 ## Block 5 — Reports + demo (~1 h + 👤 recording)
-- [x] `docs/encoder-report.md` & `docs/decoder-report.md`: 1) install & run step by step
+- [x] `docs/report.md` (one report: encoder + decoder; was two files): 1) install & run step by step
       (Windows + macOS), 2) how it works + why each choice (short), 3) results tables from
       `eval/results` + limitations (speed changes, crop, big logos, no auth, browser must stay open).
-- [x] `docs/demo-encoder.md` (~2–3 min) and `docs/demo-decoder.md` (~3 min): shot list.
+- [x] `docs/demo.md` (~5 min, encoder then decoder in one video): shot list.
 - [ ] Optional: deploy encoder to Vercel to show it opens on a phone.
 
 ## Block 6 — One server, one port

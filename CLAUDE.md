@@ -57,7 +57,7 @@ start of every session and continue from the first unfinished block.
 /decoder   FastAPI app (main.py, fingerprint.py, matching.py, static/index.html), pytest
 /supabase  schema.sql (pasted by the owner in the SQL Editor)
 /eval      make_variants.py, metric_study.py, video_eval.py, data/ (gitignored), results/
-/docs      encoder-report.md, decoder-report.md, demo-encoder.md, demo-decoder.md
+/docs      report.md (+ report.pdf via build_pdf.py), demo.md
 ```
 
 ## 4. Stack

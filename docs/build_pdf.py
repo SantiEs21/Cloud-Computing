@@ -1,6 +1,6 @@
 """Markdown reports -> PDF (tables + images), using Chrome's headless "print to PDF".
 
-Usage: python docs/build_pdf.py        -> docs/encoder-report.pdf, docs/decoder-report.pdf
+Usage: python docs/build_pdf.py        -> docs/report.pdf
 Needs Google Chrome (path below; on Windows: C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe).
 """
 import os
@@ -11,7 +11,7 @@ from pathlib import Path
 import markdown
 
 DOCS = Path(__file__).resolve().parent
-REPORTS = ["encoder-report", "decoder-report"]
+REPORTS = ["report"]
 CHROME = {
     "darwin": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "win32": r"C:\Program Files\Google\Chrome\Application\chrome.exe",

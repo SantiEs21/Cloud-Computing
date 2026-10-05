@@ -1,8 +1,15 @@
-# Decoder report — Dashcam Video Integrity
+# Dashcam Video Integrity — Report
 
-The decoder verifies a video against the hashes the encoder stored in Supabase. It answers: does it
-match, which trip, where in the trip, what percentage matches, which sections were modified, is it a
-bit-exact original segment, and how long the check took.
+The system checks that dashcam video has not been tampered with. It has two parts, served by **one
+local server on one port** (http://localhost:8000, with **Encoder | Decoder** buttons to switch page):
+
+- **Encoder** (`/`): a web page that records video from the laptop webcam (or a video file), cuts it
+  into 10-second segments, computes a SHA-256 for every segment and perceptual hashes (pHash + dHash)
+  twice per second, and sends the hashes live to Supabase. It keeps working without a network:
+  everything is queued in the browser and uploaded later without losses or duplicates.
+- **Decoder** (`/decoder/`): verifies a video against the stored hashes — does it match, which trip,
+  where in the trip, what percentage matches, which sections were modified, is it a bit-exact original
+  segment, and how long the check took.
 
 ## 1. Install and run
 
@@ -50,6 +57,11 @@ python -m pytest
 
 `localhost` is a secure context, so the camera works without HTTPS.
 
+**Using it (Encoder page, `/`):** type a Driver ID → choose Webcam or Video file → Start. The Status table shows frames,
+hashes, rows sent, pending rows, network state and upload latency. "Simulate offline" stops the
+uploads. Recorded segments are listed at the bottom with a Download link (used to test the decoder).
+Keep the tab visible while recording (see limitations).
+
 **Using it (Decoder page, `/decoder/`):** choose a trip (or "Auto — search all trips"), choose a video, press Verify. The page
 shows the verdict, the result table and a bar with one box per 0.5 s (green = matched, red =
 changed, grey = no stored sample at that time). "Purge" deletes server data older than N hours.
@@ -63,7 +75,36 @@ python -m eval.metric_study        # metric comparison, writes decoder/threshold
 python -m eval.video_eval <tripA id>
 ```
 
-## 2. How it works (and why)
+## 2. Encoder: how it works (and why)
+
+```
+webcam / video file
+  │
+  ▼
+<canvas> 640x360, 15 fps ─► captureStream ─► MediaRecorder (restarted every 10 s)
+  │                                            └─► segment .webm ─► SHA-256 ──┐
+  └─► every 500 ms: getImageData ─► pHash + dHash ─────────────────────────────┤
+                                                                               ▼
+                            IndexedDB queue ─► retry every 3 s ─► Supabase upsert
+                                                                  (ignore duplicates)
+```
+
+| Requirement | Implementation | Why |
+|---|---|---|
+| Frame acquisition | `getUserMedia` (webcam) or a `<video>` playing a file; each frame is drawn on a canvas at 15 fps (`src/recorder.ts`) | One code path for both sources; the canvas is exactly what gets recorded **and** hashed |
+| Video composed from the frames | `canvas.captureStream(15)` → `MediaRecorder` (WebM/VP8 in Chrome). A **new recorder every 10 s** | Each segment is a standalone playable file, so it has its own SHA-256 and can be verified alone |
+| Hash generation | SHA-256 of every segment (`crypto.subtle`). Every 500 ms pHash and dHash of the canvas (`src/hash.ts`) | SHA-256 = exact integrity (any change breaks it). Perceptual hashes survive re-encoding, resizing, brightness, noise |
+| Same hashes as the decoder | `hash.ts` and `decoder/fingerprint.py` implement the same algorithm: grayscale → 32×32 area resize → pHash (DCT 8×8 > median) / dHash (9×8 gradients) | A Vitest test hashes 3 PNG images in JS and compares with the Python hashes (≤ 4 bits; it passes) |
+| Live transmission | Rows go to Supabase in batches every 3 s (`src/queue.ts`, `src/supabase.ts`) | Simple; 3 s delay is acceptable for a dashcam record |
+| Network-loss handling | Every row is first saved in **IndexedDB**; it is deleted only after the server confirmed it. Retry every 3 s and on the browser `online` event | Nothing is lost if the network or the server fails, or if the page is reloaded |
+| No duplicates | Primary keys `(trip_id, sample_idx)` and `(trip_id, seq)` + `upsert(..., { ignoreDuplicates: true })` (= `INSERT … ON CONFLICT DO NOTHING`). Locally the queue key is the same primary key | Re-sending is harmless and the order does not matter, so the retry logic stays trivial |
+| Deletion of expired data | Every minute: local segments older than N minutes (default 10) are deleted from IndexedDB, and the server function `purge_expired(hours)` deletes rows older than N hours (default 24) | Limited local storage; old records do not stay forever |
+| Security | Supabase RLS: the public key can only `insert` and `select`. No update/delete policy → the record is append-only. Deletion only through `purge_expired` (security definer, minimum 1 h) | Nobody with the public key can change or erase recent evidence |
+
+Positions in time: each fingerprint stores `t_ms` (elapsed time for the webcam, `video.currentTime`
+for a file). The decoder aligns by `t_ms`, not by index, because browser timers jitter.
+
+## 3. Decoder: how it works (and why)
 
 1. **Exact check:** SHA-256 of the uploaded file is looked up in `segments`. A hit means the file is
    byte-for-byte a recorded segment ("bit-exact original segment N"). Any change breaks it.
@@ -87,13 +128,42 @@ Why pHash in the decoder although cosine scored slightly higher (below): a pHash
 256-value vector per sample. pHash is also the same algorithm in the browser and in Python (verified
 by a test). Its accuracy is almost identical (98.9 % vs 99.8 %) with **0 false positives**.
 
-## 3. Results
+## 4. Results
+
+### 4.1 Encoder: tests and network
+
+**Automated tests** (`npm test`, `SUPABASE_IT=1 npm test`): 10/10 pass.
+
+- Hash parity JS vs Python on 3 test images (≤ 4 bits; exact on the same 32×32 input).
+- Queue keeps rows while offline and when the server is unreachable; empties after reconnect.
+- Same batch sent twice → no error, no duplicates (fake server and **real Supabase**).
+- Real Supabase: the public key cannot update or delete; `purge_expired` is callable.
+
+**Network tests** (real Supabase, values from the database — `eval/results/network_tests.md`):
+
+| Test | Rows queued | Result |
+|---|---|---|
+| Wi-Fi off during a whole file-mode trip (`e5488849`, 83.6 s) | 178 (1 trip + 9 segments + 168 fingerprints) | Uploaded in one batch after reconnect; **0 gaps** in `sample_idx` and `seq` |
+| Wi-Fi off during a webcam trip (`d284be5b`, 19.1 s) | 39 (1 + 2 + 36) | Uploaded in one batch after reconnect; **0 gaps** |
+| Same trip online (`a2280b49`) for reference | — | Rows arrive spread over the 83 s of recording (live) |
+| Duplicate sends (integration test) | — | Second send ignored, first version kept, 0 duplicates |
+
+<img src="../eval/results/network_arrival.png" alt="Arrival time of fingerprint rows in Supabase: online trip vs trip recorded with the network off" width="100%">
+
+*Figure 1 — When fingerprint rows reach Supabase (server arrival time, from the database). Online,
+rows arrive in small batches every 3 s while recording. With the network off, all 168 rows of the
+trip stay in the browser queue and arrive together when the network comes back (at 297 s here).*
+
+**Sampling regularity:** with the tab visible, samples are 469–531 ms apart (trip `a2280b49`). In an
+early trip where the tab was hidden for a while, spacing was 197–1007 ms — no samples were lost
+(0 gaps) but timing was irregular, which is why the decoder matches by time.
+
+### 4.2 Metric comparison (`eval/results/thresholds.csv`)
 
 Data: trip A = `tripA.mp4` (84 s dashcam video, recorded with the encoder in file mode, trip
 `a2280b49`), trip B = `tripB.mp4` (10.4 s, trip `e2b53bdc`). Variants were made from a 720p copy of
 trip A (4K processing was too slow; the hashes work on 32×32 images).
 
-### 3.1 Metric comparison (`eval/results/thresholds.csv`)
 1008 positive pairs (frame of A vs the same timestamp in a content-preserving variant, 1 per second,
 12 variants) and 84 negative pairs (frame of A vs frame of B). Threshold = best balanced accuracy.
 
@@ -120,7 +190,7 @@ similarity was 0 for every pair). All histograms: `eval/results/hist_*.png`.
 <img src="../eval/results/hist_phash_hamming.png" alt="pHash distance histogram" width="49%"> <img src="../eval/results/hist_dhash_hamming.png" alt="dHash distance histogram" width="49%">
 <img src="../eval/results/hist_cosine.png" alt="Cosine distance histogram" width="49%"> <img src="../eval/results/hist_tlsh.png" alt="TLSH distance histogram" width="49%">
 
-*Figure 1 — Distance histograms: same content (blue) vs other trip (orange), dashed line = chosen
+*Figure 2 — Distance histograms: same content (blue) vs other trip (orange), dashed line = chosen
 threshold. pHash, dHash and cosine separate the two groups; TLSH overlaps.*
 
 Mean Hamming distance (bits) per variant (`eval/results/mean_distance_per_variant.csv`):
@@ -141,7 +211,8 @@ Mean Hamming distance (bits) per variant (`eval/results/mean_distance_per_varian
 | crop 80 % | 14.76 | 18.30 | 6.36 | 8.00 |
 | **trip A vs trip B** | **28.19** | **30.69** | **12.87** | **20.45** |
 
-### 3.2 Decoder on whole videos (`eval/results/video_eval.md`)
+### 4.3 Decoder on whole videos (`eval/results/video_eval.md`)
+
 The real decoder (hashes of the variants in Python vs the hashes the **browser** stored for trip A),
 pHash threshold 16 bits.
 
@@ -171,7 +242,7 @@ pHash threshold 16 bits.
 
 <img src="../eval/results/video_eval_matched.png" alt="Matched samples per variant" width="78%">
 
-*Figure 2 — Matched samples per variant (pHash threshold 16 bits). Dashed lines: verdict limits.*
+*Figure 3 — Matched samples per variant (pHash threshold 16 bits). Dashed lines: verdict limits.*
 
 **Summary:** 21 variants, **20 correct verdicts**. True matches 20, **missed matches 0**,
 **false matches 0**, modifications detected **5 / 5**. Processing time 0.5–7.6 s per variant (10–87 s of
@@ -183,7 +254,22 @@ as 42.0–47.5 s.
 (`trip-72d0f447-seg0.webm`) → exact SHA-256 match with segment 0, `AUTHENTIC`, position 0.0 s,
 mean distance 3.0 bits. The JS and Python hashes of the same frames differ by 0–2 bits on most samples.
 
-## 4. Limitations
+## 5. Limitations
+
+### Encoder
+
+- **Chrome recommended.** Chrome records WebM; Safari records MP4 (not tested).
+- **The tab must stay visible** while recording: browsers throttle timers in background tabs
+  (fewer frames, irregular samples).
+- **No user authentication** (driver ID typed by hand): anyone with the public key can insert rows
+  and read all trips, and can purge data older than 1 hour. Fine for a prototype, not for production.
+- Local storage is the browser's: if the user clears site data before reconnecting, pending rows are lost.
+- The video itself is only stored locally (10 min by default); only hashes go to the server.
+- The encoder page is served as a static build (`encoder/dist`): after changing `encoder/` code (or
+  `encoder/.env`) run `npm run build` again. `npm run dev` (port 5173) still works for development.
+- Hashing every 500 ms runs on the main thread (~640×360 pixels); fine on a laptop, may be slow on old phones.
+
+### Decoder
 
 - **Crop** changes the whole frame for a global hash → crop 80 % is not recognised as authentic
   (14.8 bits mean pHash distance, close to the 16-bit threshold). This is the only wrong verdict.
