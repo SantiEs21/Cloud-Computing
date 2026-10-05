@@ -32,8 +32,8 @@ segments(trip_id uuid, seq int, t_start_ms int, duration_ms int, sha256 text, si
 fingerprints(trip_id uuid, sample_idx int, t_ms int, phash text, dhash text,
          created_at timestamptz default now(), primary key(trip_id, sample_idx))
 ```
-- [x] RLS on: anon may `insert` and `select`, nothing else.
-- [x] Function `purge_expired(hours int)` deleting rows older than N hours (security definer),
+- [ ] RLS on: anon may `insert` and `select`, nothing else. (SQL written; verify with `SUPABASE_IT=1 npm test`)
+- [ ] Function `purge_expired(hours int)` deleting rows older than N hours (security definer),
       callable via RPC. Optional `pg_cron` job every 10 min with a comment on how to enable it.
 
 ### 2.2 Encoder page (one simple page)
@@ -54,6 +54,11 @@ fingerprints(trip_id uuid, sample_idx int, t_ms int, phash text, dhash text,
       minute. List of local segments with a **Download** link (needed to test the decoder).
 - [x] Vitest: queue keeps items while offline, empties after reconnect, sending the same batch
       twice produces no error.
+
+- Limitations (for the reports): use **Chrome** (webm; Safari records MP4); keep the encoder tab
+  **visible** while recording (background tabs throttle timers to ~1 s → fewer frames and samples);
+  `purge_expired` has a 1 h minimum so the public key cannot wipe fresh data, but anyone with the
+  key can purge data older than that (no auth).
 
 👤 Check: record 1 min with webcam, tick "Simulate offline" 20 s (or DevTools → Network → Offline),
 see pending grow then go to 0; Supabase table shows no gaps in `sample_idx`.

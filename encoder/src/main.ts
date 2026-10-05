@@ -42,7 +42,9 @@ async function start() {
   startedAt = Date.now()
   await queue.add('trips', { id: tripId, driver_id: driver, started_at: new Date(startedAt).toISOString() })
 
-  recorder = new Recorder(video, canvas, fileMode, onSegment, onSample)
+  // Bind the trip ID now: a late segment callback must not land in the next trip.
+  const trip = tripId
+  recorder = new Recorder(video, canvas, fileMode, (s) => onSegment(trip, s), (s) => onSample(trip, s))
   recorder.start()
   $<HTMLButtonElement>('start').disabled = true
   $<HTMLButtonElement>('stop').disabled = false
@@ -60,12 +62,11 @@ function stop() {
 }
 
 // Hash rows are queued (IndexedDB) first; the retry loop sends them.
-async function onSample(s: Sample) {
-  await queue.add('fingerprints', { trip_id: tripId, sample_idx: s.idx, t_ms: s.tMs, phash: s.phash, dhash: s.dhash })
+async function onSample(trip: string, s: Sample) {
+  await queue.add('fingerprints', { trip_id: trip, sample_idx: s.idx, t_ms: s.tMs, phash: s.phash, dhash: s.dhash })
 }
 
-async function onSegment(s: Segment) {
-  const trip = tripId
+async function onSegment(trip: string, s: Segment) {
   await saveSegment(db, { id: `${trip}:${s.seq}`, trip_id: trip, seq: s.seq, createdAt: Date.now(), sha256: s.sha256, mime: s.mime, blob: s.blob })
   await queue.add('segments', {
     trip_id: trip, seq: s.seq, t_start_ms: s.tStartMs, duration_ms: s.durationMs, sha256: s.sha256, size_bytes: s.blob.size,

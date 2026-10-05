@@ -1,7 +1,7 @@
 // Integration test against the real Supabase project (needs encoder/.env and the schema).
 // Run with: SUPABASE_IT=1 npm test
 import { describe, expect, it } from 'vitest'
-import { supabase, supabaseSender } from '../src/supabase'
+import { purgeServer, supabase, supabaseSender } from '../src/supabase'
 
 describe.skipIf(!process.env.SUPABASE_IT)('Supabase (integration)', () => {
   const trip = crypto.randomUUID()
@@ -21,5 +21,11 @@ describe.skipIf(!process.env.SUPABASE_IT)('Supabase (integration)', () => {
     await supabase.from('fingerprints').delete().eq('trip_id', trip)
     const { data } = await supabase.from('fingerprints').select('phash').eq('trip_id', trip)
     expect(data).toEqual([{ phash: row.phash }])
+  })
+  it('purge_expired is callable with the public key', async () => {
+    const r = await purgeServer(24)
+    expect(typeof r.fingerprints).toBe('number')
+    expect(typeof r.segments).toBe('number')
+    expect(typeof r.trips).toBe('number')
   })
 })
