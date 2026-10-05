@@ -42,11 +42,15 @@ Keep the tab visible while recording (see limitations).
 ## 2. How it works (and why)
 
 ```
-webcam / video file ─► <canvas> 640x360, 15 fps ─┬─► captureStream ─► MediaRecorder (new one every 10 s)
-                                                  │                    └► segment .webm ─► SHA-256 ─┐
-                                                  └─► every 500 ms: getImageData ─► pHash + dHash ───┤
-                                                                                                     ▼
-                                              IndexedDB queue ─► retry every 3 s ─► Supabase upsert (ignore duplicates)
+webcam / video file
+  │
+  ▼
+<canvas> 640x360, 15 fps ─► captureStream ─► MediaRecorder (restarted every 10 s)
+  │                                            └─► segment .webm ─► SHA-256 ──┐
+  └─► every 500 ms: getImageData ─► pHash + dHash ─────────────────────────────┤
+                                                                               ▼
+                            IndexedDB queue ─► retry every 3 s ─► Supabase upsert
+                                                                  (ignore duplicates)
 ```
 
 | Requirement | Implementation | Why |
@@ -67,6 +71,7 @@ for a file). The decoder aligns by `t_ms`, not by index, because browser timers 
 ## 3. Results
 
 **Automated tests** (`npm test`, `SUPABASE_IT=1 npm test`): 10/10 pass.
+
 - Hash parity JS vs Python on 3 test images (≤ 4 bits; exact on the same 32×32 input).
 - Queue keeps rows while offline and when the server is unreachable; empties after reconnect.
 - Same batch sent twice → no error, no duplicates (fake server and **real Supabase**).
@@ -80,6 +85,12 @@ for a file). The decoder aligns by `t_ms`, not by index, because browser timers 
 | Wi-Fi off during a webcam trip (`d284be5b`, 19.1 s) | 39 (1 + 2 + 36) | Uploaded in one batch after reconnect; **0 gaps** |
 | Same trip online (`a2280b49`) for reference | — | Rows arrive spread over the 83 s of recording (live) |
 | Duplicate sends (integration test) | — | Second send ignored, first version kept, 0 duplicates |
+
+<img src="../eval/results/network_arrival.png" alt="Arrival time of fingerprint rows in Supabase: online trip vs trip recorded with the network off" width="100%">
+
+*Figure 1 — When fingerprint rows reach Supabase (server arrival time, from the database). Online,
+rows arrive in small batches every 3 s while recording. With the network off, all 168 rows of the
+trip stay in the browser queue and arrive together when the network comes back (at 297 s here).*
 
 **Sampling regularity:** with the tab visible, samples are 469–531 ms apart (trip `a2280b49`). In an
 early trip where the tab was hidden for a while, spacing was 197–1007 ms — no samples were lost

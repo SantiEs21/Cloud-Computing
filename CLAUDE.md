@@ -80,6 +80,8 @@ python -m decoder.tests.make_hash_fixtures        # regenerate hash parity fixtu
 python eval/make_variants.py eval/data/tripA.mp4 eval/data/tripB.mp4   # ~12 min, needs ffmpeg
 python -m eval.metric_study                       # writes decoder/thresholds.json
 python -m eval.video_eval a2280b49                # trip A id (prefix ok)
+python -m eval.plots a2280b49 e5488849            # report figures (online vs offline trip)
+python docs/build_pdf.py                          # docs/*-report.md -> PDF (needs Chrome)
 ```
 
 ## 6. Rules

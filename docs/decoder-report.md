@@ -93,7 +93,13 @@ trip A (4K processing was too slow; the hashes work on 32×32 images).
 
 Normalized Hamming = Hamming / 64, so it gives the same ranking. **ssdeep and TLSH do not work** on
 video frames: they hash the compressed bytes, and any re-encoding changes all the bytes (ssdeep
-similarity was 0 for every pair). Histograms: `eval/results/hist_*.png`.
+similarity was 0 for every pair). All histograms: `eval/results/hist_*.png`.
+
+<img src="../eval/results/hist_phash_hamming.png" alt="pHash distance histogram" width="49%"> <img src="../eval/results/hist_dhash_hamming.png" alt="dHash distance histogram" width="49%">
+<img src="../eval/results/hist_cosine.png" alt="Cosine distance histogram" width="49%"> <img src="../eval/results/hist_tlsh.png" alt="TLSH distance histogram" width="49%">
+
+*Figure 1 — Distance histograms: same content (blue) vs other trip (orange), dashed line = chosen
+threshold. pHash, dHash and cosine separate the two groups; TLSH overlaps.*
 
 Mean Hamming distance (bits) per variant (`eval/results/mean_distance_per_variant.csv`):
 
@@ -140,6 +146,10 @@ pHash threshold 16 bits.
 | crop 80 % | AUTHENTIC | **MODIFIED** ✗ | 71.4 | 14.69 | 0.1 | 11 sections | 1924 |
 | other trip (B) | NO MATCH | NO MATCH | 19.0 | 23.52 | 7.6 | – | 500 |
 | partial replacement (5 s of B) | MODIFIED | MODIFIED | 93.5 | 3.58 | 0.1 | 42.0–47.5 s | 3368 |
+
+<img src="../eval/results/video_eval_matched.png" alt="Matched samples per variant" width="78%">
+
+*Figure 2 — Matched samples per variant (pHash threshold 16 bits). Dashed lines: verdict limits.*
 
 **Summary:** 21 variants, **20 correct verdicts**. True matches 20, **missed matches 0**,
 **false matches 0**, modifications detected **5 / 5**. Processing time 0.5–7.6 s per variant (10–87 s of
