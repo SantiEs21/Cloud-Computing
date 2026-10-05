@@ -1,0 +1,37 @@
+# Video evaluation (decoder vs trip A)
+
+Trip A: `a2280b49-d51e-44f8-8c60-a21d5c4e63d0`
+
+| variant         | expected   | verdict   | correct   |   matched_pct |   mean_distance |   position_s | modified_sections                                                                                                                            |   samples |   time_ms |
+|:----------------|:-----------|:----------|:----------|--------------:|----------------:|-------------:|:---------------------------------------------------------------------------------------------------------------------------------------------|----------:|----------:|
+| original        | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.25 |          0.1 | -                                                                                                                                            |       168 |      3261 |
+| trim_start      | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.23 |         10.1 | -                                                                                                                                            |       148 |      2955 |
+| trim_end        | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.24 |          0.1 | -                                                                                                                                            |       148 |      3225 |
+| extract_middle  | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.1  |         32.1 | -                                                                                                                                            |        40 |       833 |
+| shift_black_3s  | MODIFIED   | MODIFIED  | True      |          96.6 |            2.36 |         -2.9 | 0.0-3.0 s                                                                                                                                    |       174 |      3646 |
+| speed_1_05      | MODIFIED   | MODIFIED  | True      |          66.2 |           13.28 |          3.1 | 2.0-12.5 s; 13.0-14.5 s; 38.5-40.0 s; 41.5-42.5 s; 46.0-47.5 s; 48.0-49.0 s; 53.0-54.0 s; 67.5-68.5 s; 73.5-76.0 s; 76.5-78.5 s              |       160 |      3332 |
+| fps_10          | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.32 |          0.1 | -                                                                                                                                            |       168 |      2364 |
+| delete_1s       | MODIFIED   | MODIFIED  | True      |          88.6 |            6.39 |          1.1 | 4.0-11.0 s; 14.0-15.0 s; 40.5-41.5 s                                                                                                         |       166 |      3528 |
+| duplicate_1s    | MODIFIED   | MODIFIED  | True      |          87.6 |            6.45 |         -0.9 | 5.0-12.0 s; 13.0-14.0 s; 41.5-43.0 s                                                                                                         |       170 |      3515 |
+| h265            | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.38 |          0.1 | -                                                                                                                                            |       168 |      3382 |
+| bitrate_300k    | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.61 |          0.1 | -                                                                                                                                            |       168 |      2784 |
+| res_640x360     | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.31 |          0.1 | -                                                                                                                                            |       168 |       901 |
+| crf_40          | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.56 |          0.1 | -                                                                                                                                            |       168 |      2765 |
+| brightness_0_2  | AUTHENTIC  | AUTHENTIC | True      |         100   |            3.08 |          0.1 | -                                                                                                                                            |       168 |      3462 |
+| contrast_1_5    | AUTHENTIC  | AUTHENTIC | True      |         100   |            3.57 |          0.1 | -                                                                                                                                            |       168 |      3587 |
+| salt_pepper_5   | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.36 |          0.1 | -                                                                                                                                            |       168 |      7604 |
+| gaussian_noise  | AUTHENTIC  | AUTHENTIC | True      |         100   |            1.39 |          0.1 | -                                                                                                                                            |       168 |      6856 |
+| logo            | AUTHENTIC  | AUTHENTIC | True      |         100   |            4.13 |          0.1 | -                                                                                                                                            |       168 |      3539 |
+| crop_80         | AUTHENTIC  | MODIFIED  | False     |          71.4 |           14.69 |          0.1 | 7.5-10.0 s; 10.5-11.5 s; 49.5-51.0 s; 52.0-55.0 s; 55.5-56.5 s; 57.0-58.0 s; 59.0-60.0 s; 69.5-71.5 s; 72.0-73.0 s; 77.5-78.5 s; 79.0-81.5 s |       168 |      1924 |
+| other_trip      | NO MATCH   | NO MATCH  | True      |          19   |           23.52 |          7.6 | 0.0-6.0 s; 8.0-10.5 s                                                                                                                        |        21 |       500 |
+| partial_replace | MODIFIED   | MODIFIED  | True      |          93.5 |            3.58 |          0.1 | 42.0-47.5 s                                                                                                                                  |       168 |      3368 |
+
+## Summary
+
+- variants: **21**
+- correct verdicts: **20**
+- true matches (trip recognised when it should be): **20**
+- missed matches (NO MATCH but same trip): **0**
+- false matches (recognised but other trip): **0**
+- modifications detected (expected MODIFIED -> MODIFIED): **5 / 5**
+- pHash threshold (bits): **16**

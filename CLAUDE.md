@@ -77,8 +77,9 @@ uvicorn decoder.main:app --reload                 # http://localhost:8000  (page
 python -m pytest                                  # decoder tests (run from repo root)
 python -m decoder.tests.make_hash_fixtures        # regenerate hash parity fixtures
 # Supabase: paste supabase/schema.sql in the SQL Editor (safe to re-run)
-python eval/make_variants.py eval/data/original.mp4
-python eval/metric_study.py && python eval/video_eval.py
+python eval/make_variants.py eval/data/tripA.mp4 eval/data/tripB.mp4   # ~12 min, needs ffmpeg
+python -m eval.metric_study                       # writes decoder/thresholds.json
+python -m eval.video_eval a2280b49                # trip A id (prefix ok)
 ```
 
 ## 6. Rules

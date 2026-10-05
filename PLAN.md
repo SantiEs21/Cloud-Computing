@@ -92,23 +92,25 @@ see pending grow then go to 0; Supabase table shows no gaps in `sample_idx`.
 ## Block 4 — Evaluation (~1.5 h)
 👤 Data: record 2 trips with the encoder (file mode with 2 different dashcam videos is easiest),
 put the videos in `eval/data/` (`tripA.mp4`, `tripB.mp4`) and give the trip IDs.
-- [ ] `make_variants.py` (ffmpeg, one variant each): trim start, trim end, extract middle, shift
+- [x] `make_variants.py` (ffmpeg, one variant each): trim start, trim end, extract middle, shift
       (3 s black at start), speed ×1.05, FPS 10, delete 1 s of frames, duplicate 1 s, H.265, low
       bitrate (300k), resolution 640×360, high compression (CRF 40), brightness +0.2, contrast 1.5,
       salt-and-pepper 5 % (OpenCV), Gaussian noise, logo overlay, crop 80 %, other trip,
       partial replacement (A with 5 s of B).
-- [ ] `metric_study.py`: original vs each variant frame by frame (same timestamps) = positive pairs;
+- [x] `metric_study.py`: original vs each variant frame by frame (same timestamps) = positive pairs;
       trip A vs trip B = negative pairs. Distances: aHash/dHash/pHash/wHash with Hamming and
       normalized Hamming; ssdeep and TLSH on JPEG bytes of each frame; L1/L2/cosine on a 16×16
       grayscale vector. For each metric: mean distance per variant, threshold = best accuracy
       between positives and negatives, plus a histogram plot. Save `results/metrics.csv`,
       `results/thresholds.csv`, plots; write the pHash threshold to `decoder/thresholds.json`.
-- [ ] `video_eval.py`: run the decoder matching on every variant against trip A → table: expected,
+- [x] `video_eval.py`: run the decoder matching on every variant against trip A → table: expected,
       verdict, correct?, % matched, position found, modified sections, time. Count true matches,
       false matches, missed matches, detected modifications → `results/video_eval.csv` + `.md`.
-- [ ] Network tests table (manual, filled in by the owner with values seen in the app): offline 30 s,
+- [ ] 👤 Network tests table (manual, filled in by the owner with values seen in the app): offline 30 s,
       intermittent, server unreachable (wrong URL in `.env`), duplicate sends. Template in
       `results/network_tests.md`.
+- Results: trip A = `a2280b49` (tripA.mp4, 84 s), trip B = `e2b53bdc` (tripB.mp4). Variants are made
+  from a 720p copy (4K too slow). pHash threshold = 16 bits. Video eval: 20/21 correct (crop 80 % missed).
 
 ## Block 5 — Reports + demo (~1 h + 👤 recording)
 - [ ] `docs/encoder-report.md` & `docs/decoder-report.md`: 1) install & run step by step
