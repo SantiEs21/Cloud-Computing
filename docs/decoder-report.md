@@ -6,29 +6,51 @@ bit-exact original segment, and how long the check took.
 
 ## 1. Install and run
 
-Requirements: Python ≥ 3.11, and `ffmpeg` only for the evaluation scripts.
+Encoder and decoder run on **one server and one port**: http://localhost:8000 shows the encoder,
+and the **Encoder | Decoder** buttons at the top switch between the two pages (`/` and `/decoder/`).
+
+Requirements: [Node.js LTS](https://nodejs.org) (only to build the encoder page), Python ≥ 3.11,
+Google Chrome, a Supabase project, and `ffmpeg` only for the evaluation scripts.
+
+**Supabase (once):** open the project → SQL Editor → paste all of `supabase/schema.sql` → Run.
+Then Settings → API: copy the Project URL and the publishable (anon) key.
 
 **macOS / Linux**
 ```bash
+# once (rebuild only if encoder/ code changes)
+cp encoder/.env.example encoder/.env          # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+cp decoder/.env.example decoder/.env          # SUPABASE_URL, SUPABASE_ANON_KEY
+cd encoder && npm install && npm run build && cd ..
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp decoder/.env.example decoder/.env      # SUPABASE_URL and SUPABASE_ANON_KEY
-uvicorn decoder.main:app --reload         # open http://localhost:8000
-python -m pytest                          # tests
+
+# every time: one command, one port
+uvicorn decoder.main:app                      # open http://localhost:8000 in Chrome
+
+# tests
+cd encoder && npm test && SUPABASE_IT=1 npm test && cd ..
+python -m pytest
 ```
 
 **Windows (PowerShell)**
 ```powershell
+copy encoder\.env.example encoder\.env        # edit both with Notepad
+copy decoder\.env.example decoder\.env
+cd encoder; npm install; npm run build; cd ..
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-copy decoder\.env.example decoder\.env    # edit it with Notepad
-uvicorn decoder.main:app --reload
+
+uvicorn decoder.main:app                      # open http://localhost:8000 in Chrome
+
+cd encoder; npm test; $env:SUPABASE_IT=1; npm test; cd ..
 python -m pytest
 ```
 
-**Using it:** choose a trip (or "Auto — search all trips"), choose a video, press Verify. The page
+`localhost` is a secure context, so the camera works without HTTPS.
+
+**Using it (Decoder page, `/decoder/`):** choose a trip (or "Auto — search all trips"), choose a video, press Verify. The page
 shows the verdict, the result table and a bar with one box per 0.5 s (green = matched, red =
 changed, grey = no stored sample at that time). "Purge" deletes server data older than N hours.
 

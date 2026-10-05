@@ -1,6 +1,7 @@
 # Demo video — Decoder (~3 min)
 
-Before recording: `uvicorn decoder.main:app --reload`, open http://localhost:8000. Have ready:
+Before recording: `uvicorn decoder.main:app`, open http://localhost:8000 and press **Decoder** at the top
+(or go to http://localhost:8000/decoder/). Have ready:
 a segment downloaded from the encoder, `eval/data/variants/` (brightness_0_2, partial_replace,
 trim_start, other_trip) and `eval/results/`.
 

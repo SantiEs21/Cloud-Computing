@@ -6,19 +6,16 @@ video against the stored hashes. `eval/` compares distance metrics and picks thr
 
 See `CLAUDE.md` (design) and `PLAN.md` (progress).
 
-## Quick start
+## Quick start (one server, one port)
 ```
-# encoder  -> http://localhost:5173
-cd encoder && npm install && cp .env.example .env && npm run dev
-cd encoder && npm test
-
-# decoder  -> http://localhost:8000
-python3 -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
+cp encoder/.env.example encoder/.env && cp decoder/.env.example decoder/.env   # fill in Supabase URL + key
+cd encoder && npm install && npm run build && cd ..                            # build the encoder page
+python3 -m venv .venv && source .venv/bin/activate                             # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp decoder/.env.example decoder/.env
-uvicorn decoder.main:app --reload
-python -m pytest
+uvicorn decoder.main:app                                                       # http://localhost:8000
 ```
+`/` = encoder, `/decoder/` = decoder (buttons at the top of both pages), `/api/...` = decoder API.
+Tests: `cd encoder && npm test` and `python -m pytest`.
 
 ## Layout
 - `encoder/` Vite + TypeScript, `src/hash.ts` = pHash/dHash (same algorithm as `decoder/fingerprint.py`)

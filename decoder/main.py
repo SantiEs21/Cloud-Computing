@@ -1,4 +1,8 @@
-"""Decoder API + page. Run from the repo root: uvicorn decoder.main:app --reload"""
+"""One server for everything (run from the repo root: uvicorn decoder.main:app):
+  /          encoder page (built with `cd encoder && npm run build` -> encoder/dist)
+  /decoder/  decoder page
+  /api/...   decoder API
+"""
 import hashlib
 import json
 import os
@@ -8,6 +12,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, HTTPException, UploadFile
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from supabase import create_client
 
@@ -111,5 +116,20 @@ def purge(hours: int = Form(24)):
     return db.rpc("purge_expired", {"hours": hours}).execute().data
 
 
-# The page (declared last so /api routes take precedence)
-app.mount("/", StaticFiles(directory=HERE / "static", html=True), name="static")
+# Pages (mounted last so the /api routes above take precedence)
+ENCODER_DIST = HERE.parent / "encoder" / "dist"
+
+
+@app.get("/decoder", include_in_schema=False)
+def decoder_slash():  # otherwise the encoder mounted at "/" would answer 404 for "/decoder"
+    return RedirectResponse("/decoder/")
+
+
+app.mount("/decoder", StaticFiles(directory=HERE / "static", html=True), name="decoder")
+if ENCODER_DIST.exists():
+    app.mount("/", StaticFiles(directory=ENCODER_DIST, html=True), name="encoder")
+else:
+    @app.get("/", response_class=HTMLResponse)
+    def encoder_not_built():
+        return ("<h1>Encoder not built</h1><p>Run <code>cd encoder &amp;&amp; npm run build</code>, then restart "
+                "the server. The <a href='/decoder/'>decoder</a> works already.</p>")

@@ -119,6 +119,12 @@ put the videos in `eval/data/` (`tripA.mp4`, `tripB.mp4`) and give the trip IDs.
 - [x] `docs/demo-encoder.md` (~2–3 min) and `docs/demo-decoder.md` (~3 min): shot list.
 - [ ] Optional: deploy encoder to Vercel to show it opens on a phone.
 
+## Block 6 — One server, one port
+- [x] FastAPI serves the built encoder at `/` and the decoder at `/decoder/`; Encoder | Decoder buttons
+      on both pages. `cd encoder && npm run build` once, then only `uvicorn decoder.main:app`.
+- [x] Checked end to end in Chrome on :8000 (fake camera + file mode): record, simulate offline,
+      switch page, verify segment → AUTHENTIC, exact SHA-256 match.
+
 ---
 **If short on time, cut:** pg_cron job → Gaussian noise / contrast / FPS variants → histogram plots →
 Vercel. **Never cut:** offline queue, decoder verdict, metric/threshold table, reports.

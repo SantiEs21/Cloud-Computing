@@ -8,7 +8,7 @@ start of every session and continue from the first unfinished block.
 - Plain, minimal UI (simple HTML + a little CSS). No frameworks, no design work.
 - Choose the simplest correct solution. No over-engineering. If something gets complicated,
   simplify and write the limitation in the docs.
-- Runs **locally**: encoder on `http://localhost:5173` using the **laptop webcam** (localhost is a
+- Runs **locally** on one server/port: `http://localhost:8000` (encoder at `/`, decoder at `/decoder/`) using the **laptop webcam** (localhost is a
   secure context, so no HTTPS needed) or a **video file** as source. Deploying to Vercel for a phone
   is optional at the very end.
 - Work autonomously inside a block; stop only when the owner must act (Supabase keys, SQL, testing).
@@ -68,12 +68,13 @@ start of every session and continue from the first unfinished block.
 
 ## 5. Commands (keep updated)
 ```
-cd encoder && npm install && cp .env.example .env && npm run dev   # http://localhost:5173
+cd encoder && npm install && cp .env.example .env && npm run build   # build encoder page -> encoder/dist
+uvicorn decoder.main:app                          # ONE server: http://localhost:8000 (/ encoder, /decoder/ decoder, /api)
+cd encoder && npm run dev                         # optional, encoder dev server on :5173
 cd encoder && npm test                            # Vitest (hash parity, offline queue)
 cd encoder && SUPABASE_IT=1 npm test              # + integration test against the real Supabase
 python3 -m venv .venv  (Windows: .venv\Scripts\activate | mac/linux: source .venv/bin/activate)
 pip install -r requirements.txt
-uvicorn decoder.main:app --reload                 # http://localhost:8000  (page + /api/verify)
 python -m pytest                                  # decoder tests (run from repo root)
 python -m decoder.tests.make_hash_fixtures        # regenerate hash parity fixtures
 # Supabase: paste supabase/schema.sql in the SQL Editor (safe to re-run)

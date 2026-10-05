@@ -7,34 +7,51 @@ network: everything is queued in the browser and uploaded later without losses o
 
 ## 1. Install and run
 
-Requirements: [Node.js LTS](https://nodejs.org), Google Chrome, a Supabase project.
+Encoder and decoder run on **one server and one port**: http://localhost:8000 shows the encoder,
+and the **Encoder | Decoder** buttons at the top switch between the two pages (`/` and `/decoder/`).
+
+Requirements: [Node.js LTS](https://nodejs.org) (only to build the encoder page), Python ≥ 3.11,
+Google Chrome, a Supabase project, and `ffmpeg` only for the evaluation scripts.
 
 **Supabase (once):** open the project → SQL Editor → paste all of `supabase/schema.sql` → Run.
 Then Settings → API: copy the Project URL and the publishable (anon) key.
 
 **macOS / Linux**
 ```bash
-cd encoder
-npm install
-cp .env.example .env        # put VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in it
-npm run dev                 # open http://localhost:5173 in Chrome
-npm test                    # unit tests
-SUPABASE_IT=1 npm test      # + integration tests against Supabase
+# once (rebuild only if encoder/ code changes)
+cp encoder/.env.example encoder/.env          # VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+cp decoder/.env.example decoder/.env          # SUPABASE_URL, SUPABASE_ANON_KEY
+cd encoder && npm install && npm run build && cd ..
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# every time: one command, one port
+uvicorn decoder.main:app                      # open http://localhost:8000 in Chrome
+
+# tests
+cd encoder && npm test && SUPABASE_IT=1 npm test && cd ..
+python -m pytest
 ```
 
 **Windows (PowerShell)**
 ```powershell
-cd encoder
-npm install
-copy .env.example .env      # edit it with Notepad
-npm run dev                 # open http://localhost:5173 in Chrome
-npm test
-$env:SUPABASE_IT=1; npm test
+copy encoder\.env.example encoder\.env        # edit both with Notepad
+copy decoder\.env.example decoder\.env
+cd encoder; npm install; npm run build; cd ..
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+
+uvicorn decoder.main:app                      # open http://localhost:8000 in Chrome
+
+cd encoder; npm test; $env:SUPABASE_IT=1; npm test; cd ..
+python -m pytest
 ```
 
 `localhost` is a secure context, so the camera works without HTTPS.
 
-**Using it:** type a Driver ID → choose Webcam or Video file → Start. The Status table shows frames,
+**Using it (Encoder page, `/`):** type a Driver ID → choose Webcam or Video file → Start. The Status table shows frames,
 hashes, rows sent, pending rows, network state and upload latency. "Simulate offline" stops the
 uploads. Recorded segments are listed at the bottom with a Download link (used to test the decoder).
 Keep the tab visible while recording (see limitations).
@@ -105,4 +122,6 @@ early trip where the tab was hidden for a while, spacing was 197–1007 ms — n
   and read all trips, and can purge data older than 1 hour. Fine for a prototype, not for production.
 - Local storage is the browser's: if the user clears site data before reconnecting, pending rows are lost.
 - The video itself is only stored locally (10 min by default); only hashes go to the server.
+- The encoder page is served as a static build (`encoder/dist`): after changing `encoder/` code (or
+  `encoder/.env`) run `npm run build` again. `npm run dev` (port 5173) still works for development.
 - Hashing every 500 ms runs on the main thread (~640×360 pixels); fine on a laptop, may be slow on old phones.

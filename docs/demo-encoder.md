@@ -1,11 +1,11 @@
 # Demo video — Encoder (~2–3 min)
 
-Before recording: `cd encoder && npm run dev`, Chrome at http://localhost:5173, Supabase dashboard
+Before recording: `uvicorn decoder.main:app` (repo root), Chrome at http://localhost:8000, Supabase dashboard
 open in a **separate window** (Table Editor → `fingerprints`). Keep the encoder tab visible.
 
 | # | Time | Show | Say |
 |---|---|---|---|
-| 1 | 0:00–0:15 | The encoder page | "Web app that records dashcam video, hashes it and sends the hashes to Supabase." |
+| 1 | 0:00–0:15 | The encoder page; point at the **Encoder / Decoder** buttons | "One local server: this page records, the Decoder page verifies. The encoder records dashcam video, hashes it and sends the hashes to Supabase." |
 | 2 | 0:15–0:45 | Driver ID, Webcam, **Start**. Preview moving; Frames / Hashes / Rows sent increasing | "Frames are drawn on a canvas at 15 fps. The canvas is recorded in 10-second segments, each with a SHA-256. Every 0.5 s we compute a pHash and a dHash." |
 | 3 | 0:45–1:00 | Supabase window: new rows in `fingerprints` and `segments` | "Hashes arrive live, every 3 seconds." |
 | 4 | 1:00–1:40 | Tick **Simulate offline** (or turn Wi-Fi off) for ~20 s: Pending grows, Network = offline. Untick: Pending goes to 0 | "Without network everything is queued in IndexedDB. Rows are deleted from the queue only after the server confirms, so nothing is lost." |

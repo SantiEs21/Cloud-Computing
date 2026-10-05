@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashcam Encoder</title>
+    <link rel="icon" href="data:," />
     <style>
       body { font-family: sans-serif; max-width: 760px; margin: 1em auto; padding: 0 1em; }
       fieldset { margin-bottom: 1em; }
@@ -12,9 +13,13 @@
       table { border-collapse: collapse; }
       td { padding: 2px 10px 2px 0; }
       .err { color: #b00; }
+      nav { display: flex; gap: 6px; margin-bottom: 1em; }
+      nav a { padding: 6px 16px; border: 1px solid #2a78d6; border-radius: 4px; color: #2a78d6; text-decoration: none; }
+      nav a.active { background: #2a78d6; color: #fff; }
     </style>
   </head>
   <body>
+    <nav><a href="/" class="active">Encoder</a><a href="/decoder/">Decoder</a></nav>
     <h1>Dashcam Encoder</h1>
     <p id="config" class="err"></p>
 
