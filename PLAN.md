@@ -65,7 +65,7 @@ see pending grow then go to 0; Supabase table shows no gaps in `sample_idx`.
 
 ## Block 3 — Decoder (~1.5 h)
 - [x] `decoder/matching.py`: (verified on a real Chrome webm segment: exact SHA match, AUTHENTIC,
-      position 0.0 s, mean 3.0 bits; file-mode trip check pending 👤)
+      position 0.0 s, mean 3.0 bits; file-mode trip `a2280b49` vs tripA.mp4: AUTHENTIC 100 %)
   1. Read the uploaded video with OpenCV, take one frame every 500 ms (by timestamp), compute pHash.
   2. Load the trip's fingerprints from Supabase ordered by `t_ms`.
   3. Sliding window: for each offset, mean Hamming distance query vs stored → best offset.
@@ -106,7 +106,7 @@ put the videos in `eval/data/` (`tripA.mp4`, `tripB.mp4`) and give the trip IDs.
 - [x] `video_eval.py`: run the decoder matching on every variant against trip A → table: expected,
       verdict, correct?, % matched, position found, modified sections, time. Count true matches,
       false matches, missed matches, detected modifications → `results/video_eval.csv` + `.md`.
-- [ ] 👤 Network tests table (manual, filled in by the owner with values seen in the app): offline 30 s,
+- [x] 👤 Network tests table (real offline rows + duplicate sends filled; other rows optional) (manual, filled in by the owner with values seen in the app): offline 30 s,
       intermittent, server unreachable (wrong URL in `.env`), duplicate sends. Template in
       `results/network_tests.md`.
 - Results: trip A = `a2280b49` (tripA.mp4, 84 s), trip B = `e2b53bdc` (tripB.mp4). Variants are made

@@ -142,8 +142,8 @@ pHash threshold 16 bits.
 | partial replacement (5 s of B) | MODIFIED | MODIFIED | 93.5 | 3.58 | 0.1 | 42.0–47.5 s | 3368 |
 
 **Summary:** 21 variants, **20 correct verdicts**. True matches 20, **missed matches 0**,
-**false matches 0**, modifications detected **5 / 5**. Processing time 0.5–7.6 s per video (84 s of
-video, laptop CPU). Position checks: trimming 10 s gives 10.1 s; the middle extract (cut at
+**false matches 0**, modifications detected **5 / 5**. Processing time 0.5–7.6 s per variant (10–87 s of
+720p video, laptop CPU). Position checks: trimming 10 s gives 10.1 s; the middle extract (cut at
 32.0 s) gives 32.1 s; the 3 s black intro gives −2.9 s. The replaced 5 s (42.0–47.0 s) are reported
 as 42.0–47.5 s.
 
