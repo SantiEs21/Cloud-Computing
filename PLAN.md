@@ -5,19 +5,23 @@
 ---
 
 ## Block 1 — Setup + hashing (~45 min)
-- [ ] Layout from CLAUDE.md §3, `.gitignore` (node_modules, .venv, .env*, eval/data, dist,
+- [x] Layout from CLAUDE.md §3, `.gitignore` (node_modules, .venv, .env*, eval/data, dist,
       __pycache__), root `README.md`, root `requirements.txt`.
-- [ ] `encoder/`: Vite vanilla-ts, Vitest, `.env.example` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
-- [ ] `decoder/`: FastAPI with `/health`, `.env.example` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`).
-- [ ] Hash algorithm, same in `encoder/src/hash.ts` and `decoder/fingerprint.py`:
+- [x] `encoder/`: Vite vanilla-ts, Vitest, `.env.example` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
+- [x] `decoder/`: FastAPI with `/health`, `.env.example` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`).
+- [x] Hash algorithm, same in `encoder/src/hash.ts` and `decoder/fingerprint.py`:
       frame → grayscale (`0.299R+0.587G+0.114B`) → resize to 32×32 (encoder: draw on a 32×32 canvas;
       decoder: `cv2.resize(INTER_AREA)`) →
       - **pHash**: 2-D DCT, top-left 8×8, bit = value > median → 16 hex chars
       - **dHash**: resize 9×8, bit = right pixel > left pixel → 16 hex chars
       Plus `hamming(a, b)` helper.
-- [ ] Python also has aHash and wHash (use `imagehash` library is fine here) for the evaluation.
-- [ ] Test: same image hashed in JS and Python → Hamming ≤ 4 bits (export 3 test PNGs + their
+- [x] Python also has aHash and wHash (use `imagehash` library is fine here) for the evaluation.
+- [x] Test: same image hashed in JS and Python → Hamming ≤ 4 bits (export 3 test PNGs + their
       Python hashes to a JSON used by the Vitest test).
+- Note: the encoder does NOT resize on a 32×32 canvas; it takes `getImageData` of the capture canvas
+  and resizes in JS (area average, like `INTER_AREA`), so Vitest tests the exact browser code.
+  dHash uses `right − left > 1e-3` so exact ties (flat areas) are always 0 in both languages.
+  Fixtures: `python -m decoder.tests.make_hash_fixtures` → `encoder/test/fixtures/`.
 
 ## Block 2 — Supabase + Encoder (~2 h)
 ### 2.1 Supabase (👤 owner pastes `supabase/schema.sql` in SQL Editor)

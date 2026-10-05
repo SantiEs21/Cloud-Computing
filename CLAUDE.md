@@ -68,11 +68,13 @@ start of every session and continue from the first unfinished block.
 
 ## 5. Commands (keep updated)
 ```
-cd encoder && npm install && npm run dev          # http://localhost:5173
-cd encoder && npm test
-python -m venv .venv  (Windows: .venv\Scripts\activate | mac/linux: source .venv/bin/activate)
+cd encoder && npm install && cp .env.example .env && npm run dev   # http://localhost:5173
+cd encoder && npm test                            # Vitest (hash parity JS vs Python)
+python3 -m venv .venv  (Windows: .venv\Scripts\activate | mac/linux: source .venv/bin/activate)
 pip install -r requirements.txt
-uvicorn decoder.main:app --reload                 # http://localhost:8000
+uvicorn decoder.main:app --reload                 # http://localhost:8000  (GET /health)
+python -m pytest                                  # decoder tests (run from repo root)
+python -m decoder.tests.make_hash_fixtures        # regenerate hash parity fixtures
 python eval/make_variants.py eval/data/original.mp4
 python eval/metric_study.py && python eval/video_eval.py
 ```

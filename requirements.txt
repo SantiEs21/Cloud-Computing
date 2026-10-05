@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+python-multipart
+supabase
+python-dotenv
+numpy
+opencv-python-headless
+imagehash
+Pillow
+PyWavelets
+ppdeep
+py-tlsh
+pandas
+matplotlib
+scikit-learn
+pytest
