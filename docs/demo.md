@@ -6,11 +6,14 @@
 - Supabase dashboard open in a **separate window** (Table Editor → `fingerprints`).
 - Files ready in `eval/data/variants/`: `brightness_0_2.mp4`, `trim_start.mp4`, `partial_replace.mp4`,
   `other_trip.mp4`; and `eval/results/` (a histogram + `video_eval.md`).
+- **Trip A for steps 10–13:** the variants in `eval/data/variants/` are made from trip A, so record
+  trip A once before the demo: encoder → Video file → `eval/data/variants/base_A.mp4` → Start, keep the
+  tab visible and let it finish by itself (~84 s, 168 samples). Note its Trip ID.
 - **Trip selector in the decoder:** "Auto" only for the segment you just recorded (step 9). For steps
-  10–13 select trip **`a2280b49`** (trip A — match the ID prefix; several trips show driver-42). With
-  Auto, `other_trip.mp4` would correctly match its own trip B instead of showing NO MATCH.
-- **Server purge:** the encoder purges server rows older than 24 h every minute. Record the same day as
-  trip A (5 Oct), or raise "Keep server data (h)" in the encoder before opening it later.
+  10–13 select **trip A** (each option ends with the first 8 characters of the trip ID). With Auto, `other_trip.mp4` could match
+  another trip instead of showing NO MATCH.
+- **Server purge:** the encoder purges server rows older than "Keep server data (h)" every minute.
+  Record the demo within 24 h of recording trip A (or raise that value).
 
 ## Part 1 — Encoder (`/`)
 
@@ -30,7 +33,7 @@
 |---|---|---|---|
 | 8 | 2:30–2:40 | Click **Decoder** at the top | "Same server, decoder page." |
 | 9 | 2:40–3:05 | Trip = **Auto**, upload the segment just downloaded → AUTHENTIC, "Exact SHA-256 match: YES" | "The file is byte-identical to a recorded segment, so the SHA-256 matches. Perceptual check: matched %, position in the trip, processing time." |
-| 10 | 3:05–3:30 | Trip `a2280b49`, `brightness_0_2.mp4` → AUTHENTIC, no exact match | "Re-encoded and brighter: SHA-256 breaks, but pHash still matches — about 3 bits, threshold 16." |
+| 10 | 3:05–3:30 | Trip A, `brightness_0_2.mp4` → AUTHENTIC, no exact match | "Re-encoded and brighter: SHA-256 breaks, but pHash still matches — about 3 bits, threshold 16." |
 | 11 | 3:30–3:50 | `trim_start.mp4` → AUTHENTIC, position 10.1 s | "A cut piece is found at its position in the trip thanks to the sliding window." |
 | 12 | 3:50–4:15 | `partial_replace.mp4` → MODIFIED, red block in the bar, section 42.0–47.5 s | "5 seconds were replaced with another video: detected and located." |
 | 13 | 4:15–4:30 | `other_trip.mp4` → NO MATCH | "A different trip does not match." |
